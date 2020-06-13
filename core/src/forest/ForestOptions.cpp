@@ -37,7 +37,8 @@ ForestOptions::ForestOptions(uint num_trees,
                              uint num_threads,
                              uint random_seed,
                              const std::vector<size_t>& sample_clusters,
-                             uint samples_per_cluster):
+                             uint samples_per_cluster,
+                             uint blocklength):
     ci_group_size(ci_group_size),
     sample_fraction(sample_fraction),
     tree_options(mtry, min_node_size, honesty, honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty),
