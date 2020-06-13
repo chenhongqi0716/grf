@@ -38,41 +38,30 @@ public:
                        const std::vector<double>& responses_by_sample,
                        const std::vector<std::vector<size_t>>& samples,
                        std::vector<size_t>& split_vars,
-                       std::vector<double>& split_values);
+                       std::vector<double>& split_values,
+                       std::vector<bool>& send_missing_left);
 
 private:
-  void find_best_split_value_small_q(const Data& data,
-                                     size_t node,
-                                     size_t var,
-                                     size_t num_samples,
-                                     double sum_node,
-                                     double mean_node_z,
-                                     size_t num_node_small_z,
-                                     double sum_node_w,
-                                     double sum_node_w_squared,
-                                     double min_child_size,
-                                     double& best_value,
-                                     size_t& best_var,
-                                     double& best_decrease,
-                                     const std::vector<double>& responses_by_sample,
-                                     const std::vector<std::vector<size_t>>& samples);
-  void find_best_split_value_large_q(const Data& data,
-                                     size_t node,
-                                     size_t var,
-                                     size_t num_samples,
-                                     double sum_node,
-                                     double mean_node_z,
-                                     size_t num_node_small_z,
-                                     double sum_node_w,
-                                     double sum_node_w_squared,
-                                     double min_child_size,
-                                     double& best_value,
-                                     size_t& best_var,
-                                     double& best_decrease,
-                                     const std::vector<double>& responses_by_sample,
-                                     const std::vector<std::vector<size_t>>& samples);
+  void find_best_split_value(const Data& data,
+                             size_t node,
+                             size_t var,
+                             size_t num_samples,
+                             double weight_sum_node,
+                             double sum_node,
+                             double mean_node_z,
+                             size_t num_node_small_z,
+                             double sum_node_w,
+                             double sum_node_w_squared,
+                             double min_child_size,
+                             double& best_value,
+                             size_t& best_var,
+                             double& best_decrease,
+                             bool& best_send_missing_left,
+                             const std::vector<double>& responses_by_sample,
+                             const std::vector<std::vector<size_t>>& samples);
 
   size_t* counter;
+  double* weight_sums;
   double* sums;
   size_t* num_small_z;
   double* sums_z;

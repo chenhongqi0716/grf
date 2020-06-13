@@ -46,7 +46,7 @@
 #' @return A trained regression forest object.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Train a custom forest.
 #' n <- 50
 #' p <- 10
@@ -76,7 +76,7 @@ custom_forest <- function(X, Y,
                           compute.oob.predictions = TRUE,
                           num.threads = NULL,
                           seed = runif(1, 0, .Machine$integer.max)) {
-  validate_X(X)
+  has.missing.values <- validate_X(X)
   Y <- validate_observations(Y, X)
   clusters <- validate_clusters(clusters, X)
   samples.per.cluster <- validate_equalize_cluster_weights(equalize.cluster.weights, clusters, NULL)
@@ -84,7 +84,7 @@ custom_forest <- function(X, Y,
 
   no.split.variables <- numeric(0)
 
-  data <- create_data_matrices(X, outcome = Y)
+  data <- create_train_matrices(X, outcome = Y)
   ci.group.size <- 1
 
   forest <- custom_train(
@@ -96,6 +96,7 @@ custom_forest <- function(X, Y,
   class(forest) <- c("custom_forest", "grf")
   forest[["X.orig"]] <- X
   forest[["Y.orig"]] <- Y
+  forest[["has.missing.values"]] <- has.missing.values
   forest
 }
 
@@ -114,7 +115,7 @@ custom_forest <- function(X, Y,
 #' @return Vector of predictions.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Train a custom forest.
 #' n <- 50
 #' p <- 10
@@ -134,13 +135,13 @@ predict.custom_forest <- function(object, newdata = NULL, num.threads = NULL, ..
   forest.short <- object[-which(names(object) == "X.orig")]
 
   X <- object[["X.orig"]]
-  train.data <- create_data_matrices(X, object[["Y.orig"]])
+  train.data <- create_train_matrices(X, object[["Y.orig"]])
 
   num.threads <- validate_num_threads(num.threads)
 
   if (!is.null(newdata)) {
     validate_newdata(newdata, X)
-    data <- create_data_matrices(newdata)
+    data <- create_train_matrices(newdata)
     custom_predict(
       forest.short, train.data$train.matrix, train.data$sparse.train.matrix, train.data$outcome.index,
       data$train.matrix, data$sparse.train.matrix, num.threads

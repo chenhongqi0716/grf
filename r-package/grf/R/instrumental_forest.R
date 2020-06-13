@@ -106,7 +106,7 @@ instrumental_forest <- function(X, Y, W, Z,
                                 compute.oob.predictions = TRUE,
                                 num.threads = NULL,
                                 seed = runif(1, 0, .Machine$integer.max)) {
-  validate_X(X)
+  has.missing.values <- validate_X(X, allow.na = TRUE)
   validate_sample_weights(sample.weights, X)
   Y <- validate_observations(Y, X)
   W <- validate_observations(W, X)
@@ -167,7 +167,7 @@ instrumental_forest <- function(X, Y, W, Z,
     stop("Z.hat has incorrect length.")
   }
 
-  data <- create_data_matrices(X, outcome = Y - Y.hat, treatment = W - W.hat,
+  data <- create_train_matrices(X, outcome = Y - Y.hat, treatment = W - W.hat,
                                instrument = Z - Z.hat, sample.weights = sample.weights)
   args <- list(num.trees = num.trees,
               clusters = clusters,
@@ -228,6 +228,7 @@ instrumental_forest <- function(X, Y, W, Z,
   forest[["sample.weights"]] <- sample.weights
   forest[["tunable.params"]] <- args[all.tunable.params]
   forest[["tuning.output"]] <- tuning.output
+  forest[["has.missing.values"]] <- has.missing.values
 
   forest
 }
@@ -258,7 +259,7 @@ predict.instrumental_forest <- function(object, newdata = NULL,
                                         ...) {
 
   # If possible, use pre-computed predictions.
-  if (is.null(newdata) & !estimate.variance & !is.null(object$predictions)) {
+  if (is.null(newdata) && !estimate.variance && !is.null(object$predictions)) {
     return(data.frame(
       predictions = object$predictions,
       debiased.error = object$debiased.error
@@ -273,11 +274,11 @@ predict.instrumental_forest <- function(object, newdata = NULL,
   W.centered <- object[["W.orig"]] - object[["W.hat"]]
   Z.centered <- object[["Z.orig"]] - object[["Z.hat"]]
 
-  train.data <- create_data_matrices(X, outcome = Y.centered, treatment = W.centered, instrument = Z.centered)
+  train.data <- create_train_matrices(X, outcome = Y.centered, treatment = W.centered, instrument = Z.centered)
 
   if (!is.null(newdata)) {
-    validate_newdata(newdata, object$X.orig)
-    data <- create_data_matrices(newdata)
+    validate_newdata(newdata, object$X.orig, allow.na = TRUE)
+    data <- create_train_matrices(newdata)
     ret <- instrumental_predict(
       forest.short, train.data$train.matrix, train.data$sparse.train.matrix,
       train.data$outcome.index, train.data$treatment.index, train.data$instrument.index,

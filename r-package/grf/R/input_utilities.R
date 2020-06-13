@@ -1,4 +1,4 @@
-validate_X <- function(X) {
+validate_X <- function(X, allow.na = FALSE) {
   valid.classes <- c("matrix", "data.frame", "dgCMatrix")
 
   if (!inherits(X, valid.classes)) {
@@ -21,31 +21,35 @@ validate_X <- function(X) {
     ))
   }
 
-  if (any(is.na(X))) {
+  has.missing.values <- any(is.na(X))
+
+  if (!allow.na && has.missing.values) {
     stop("The feature matrix X contains at least one NA.")
   }
+
+  has.missing.values
 }
 
 validate_observations <- function(V, X) {
   if (is.matrix(V) && ncol(V) == 1) {
     V <- as.vector(V)
   } else if (!is.vector(V)) {
-    stop(paste("Observations (W, Y, or Z) must be vectors."))
+    stop(paste("Observations (W, Y, Z or D) must be vectors."))
   }
 
   if (!is.numeric(V) && !is.logical(V)) {
     stop(paste(
-      "Observations (W, Y, or Z) must be numeric. GRF does not ",
+      "Observations (W, Y, Z or D) must be numeric. GRF does not ",
       "currently support non-numeric observations."
     ))
   }
 
   if (any(is.na(V))) {
-    stop("The vector of observations (W, Y, or Z) contains at least one NA.")
+    stop("The vector of observations (W, Y, Z or D) contains at least one NA.")
   }
 
   if (length(V) != nrow(X)) {
-    stop("length of observation (W, Y, or Z) does not equal nrow(X).")
+    stop("length of observation (W, Y, Z or D) does not equal nrow(X).")
   }
   V
 }
@@ -112,7 +116,7 @@ validate_ll_vars <- function(linear.correction.variables, num.cols) {
     stop("Linear correction variables must take positive integer values.")
   } else if (max(linear.correction.variables) > num.cols) {
     stop("Invalid range of correction variables.")
-  } else if (!is.vector(linear.correction.variables) |
+  } else if (!is.vector(linear.correction.variables) ||
     !all(linear.correction.variables == floor(linear.correction.variables))) {
     stop("Linear correction variables must be a vector of integers.")
   }
@@ -122,7 +126,7 @@ validate_ll_vars <- function(linear.correction.variables, num.cols) {
 validate_ll_lambda <- function(lambda) {
   if (lambda < 0) {
     stop("Lambda cannot be negative.")
-  } else if (!is.numeric(lambda) | length(lambda) > 1) {
+  } else if (!is.numeric(lambda) || length(lambda) > 1) {
     stop("Lambda must be a scalar.")
   }
   lambda
@@ -139,8 +143,19 @@ validate_ll_path <- function(lambda.path) {
   lambda.path
 }
 
-validate_newdata <- function(newdata, X) {
-  validate_X(newdata)
+validate_ll_cutoff <- function(ll.split.cutoff,  num.rows) {
+   if (is.null(ll.split.cutoff)) {
+     ll.split.cutoff <- floor(sqrt(num.rows))
+   } else if (!is.numeric(ll.split.cutoff) || length(ll.split.cutoff) > 1) {
+     stop("LL split cutoff must be NULL or a scalar")
+   } else if (ll.split.cutoff < 0 || ll.split.cutoff > num.rows) {
+     stop("Invalid range for LL split cutoff")
+   }
+   ll.split.cutoff
+}
+
+validate_newdata <- function(newdata, X, allow.na = FALSE) {
+  validate_X(newdata, allow.na = allow.na)
   if (ncol(newdata) != ncol(X)) {
     stop("newdata must have the same number of columns as the training matrix.")
   }
@@ -159,8 +174,9 @@ validate_sample_weights <- function(sample.weights, X) {
 
 #' @importFrom Matrix Matrix cBind
 #' @importFrom methods new
-create_data_matrices <- function(X, outcome = NULL, treatment = NULL,
-                                 instrument = NULL, sample.weights = FALSE) {
+create_train_matrices <- function(X, outcome = NULL, treatment = NULL,
+                                 instrument = NULL, censor = NULL,
+                                 sample.weights = FALSE) {
   default.data <- matrix(nrow = 0, ncol = 0)
   sparse.data <- new("dgCMatrix", Dim = c(0L, 0L))
   out <- list()
@@ -176,6 +192,10 @@ create_data_matrices <- function(X, outcome = NULL, treatment = NULL,
     i <- i + 1
     out[["instrument.index"]] <- ncol(X) + i
   }
+  if (!is.null(censor)) {
+    i <- i + 1
+    out[["censor.index"]] <- ncol(X) + i
+  }
   if (!isFALSE(sample.weights)) {
     i <- i + 1
     out[["sample.weight.index"]] <- ncol(X) + i
@@ -189,13 +209,30 @@ create_data_matrices <- function(X, outcome = NULL, treatment = NULL,
   }
 
   if (inherits(X, "dgCMatrix") && ncol(X) > 1) {
-    sparse.data <- cbind(X, outcome, treatment, instrument, sample.weights)
+    sparse.data <- cbind(X, outcome, treatment, instrument, censor, sample.weights)
   } else {
     X <- as.matrix(X)
-    default.data <- as.matrix(cbind(X, outcome, treatment, instrument, sample.weights))
+    default.data <- as.matrix(cbind(X, outcome, treatment, instrument, censor, sample.weights))
   }
   out[["train.matrix"]] <- default.data
   out[["sparse.train.matrix"]] <- sparse.data
+
+  out
+}
+
+#' @importFrom Matrix Matrix cBind
+#' @importFrom methods new
+create_test_matrices <- function(X) {
+  default.data <- matrix(nrow = 0, ncol = 0)
+  sparse.data <- new("dgCMatrix", Dim = c(0L, 0L))
+  out <- list()
+  if (inherits(X, "dgCMatrix") && ncol(X) > 1) {
+    sparse.data <- X
+  } else {
+    default.data <- as.matrix(X)
+  }
+  out[["test.matrix"]] <- default.data
+  out[["sparse.test.matrix"]] <- sparse.data
 
   out
 }

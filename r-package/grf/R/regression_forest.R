@@ -64,7 +64,7 @@
 #'  then tuning information will be included through the `tuning.output` attribute.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Train a standard regression forest.
 #' n <- 500
 #' p <- 10
@@ -110,7 +110,7 @@ regression_forest <- function(X, Y,
                               compute.oob.predictions = TRUE,
                               num.threads = NULL,
                               seed = runif(1, 0, .Machine$integer.max)) {
-  validate_X(X)
+  has.missing.values <- validate_X(X, allow.na = TRUE)
   validate_sample_weights(sample.weights, X)
   Y <- validate_observations(Y, X)
   clusters <- validate_clusters(clusters, X)
@@ -120,7 +120,7 @@ regression_forest <- function(X, Y,
   all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
                           "honesty.prune.leaves", "alpha", "imbalance.penalty")
 
-  data <- create_data_matrices(X, outcome = Y, sample.weights = sample.weights)
+  data <- create_train_matrices(X, outcome = Y, sample.weights = sample.weights)
   args <- list(num.trees = num.trees,
                clusters = clusters,
                samples.per.cluster = samples.per.cluster,
@@ -171,6 +171,7 @@ regression_forest <- function(X, Y,
   forest[["equalize.cluster.weights"]] <- equalize.cluster.weights
   forest[["tunable.params"]] <- args[all.tunable.params]
   forest[["tuning.output"]] <- tuning.output
+  forest[["has.missing.values"]] <- has.missing.values
 
   forest
 }
@@ -211,7 +212,7 @@ regression_forest <- function(X, Y,
 #'         enough forests to make the 'excess.error' negligible.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Train a standard regression forest.
 #' n <- 50
 #' p <- 10
@@ -242,21 +243,20 @@ predict.regression_forest <- function(object, newdata = NULL,
                                       estimate.variance = FALSE,
                                       ...) {
   local.linear <- !is.null(linear.correction.variables)
+  allow.na <- !local.linear
 
   # If possible, use pre-computed predictions.
-  if (is.null(newdata) & !estimate.variance & !local.linear & !is.null(object$predictions)) {
+  if (is.null(newdata) && !estimate.variance && !local.linear && !is.null(object$predictions)) {
     return(data.frame(
       predictions = object$predictions,
       debiased.error = object$debiased.error,
-      excess.error = object$excess.error
-    ))
+      excess.error = object$excess.error))
   }
 
   num.threads <- validate_num_threads(num.threads)
-
   forest.short <- object[-which(names(object) == "X.orig")]
   X <- object[["X.orig"]]
-  train.data <- create_data_matrices(X, outcome = object[["Y.orig"]])
+  train.data <- create_train_matrices(X, outcome = object[["Y.orig"]])
 
   if (local.linear) {
     linear.correction.variables <- validate_ll_vars(linear.correction.variables, ncol(X))
@@ -264,8 +264,7 @@ predict.regression_forest <- function(object, newdata = NULL,
     if (is.null(ll.lambda)) {
       ll.regularization.path <- tune_ll_regression_forest(
         object, linear.correction.variables,
-        ll.weight.penalty, num.threads
-      )
+        ll.weight.penalty, num.threads)
       ll.lambda <- ll.regularization.path$lambda.min
     } else {
       ll.lambda <- validate_ll_lambda(ll.lambda)
@@ -274,34 +273,26 @@ predict.regression_forest <- function(object, newdata = NULL,
     # subtract 1 to account for C++ indexing
     linear.correction.variables <- linear.correction.variables - 1
   }
+  args <- list(forest.object = forest.short,
+               num.threads = num.threads,
+               estimate.variance = estimate.variance)
+  ll.args <- list(ll.lambda = ll.lambda,
+                  ll.weight.penalty = ll.weight.penalty,
+                  linear.correction.variables = linear.correction.variables)
 
   if (!is.null(newdata)) {
-    data <- create_data_matrices(newdata)
-    validate_newdata(newdata, X)
+    validate_newdata(newdata, X, allow.na = allow.na)
+    test.data <- create_test_matrices(newdata)
     if (!local.linear) {
-      ret <- regression_predict(
-        forest.short, train.data$train.matrix, train.data$sparse.train.matrix, train.data$outcome.index,
-        data$train.matrix, data$sparse.train.matrix, num.threads, estimate.variance
-      )
+      ret <- do.call.rcpp(regression_predict, c(train.data, test.data, args))
     } else {
-      ret <- ll_regression_predict(
-        forest.short, train.data$train.matrix, train.data$sparse.train.matrix, train.data$outcome.index,
-        data$train.matrix, data$sparse.train.matrix, ll.lambda, ll.weight.penalty, linear.correction.variables,
-        num.threads, estimate.variance
-      )
+      ret <- do.call.rcpp(ll_regression_predict, c(train.data, test.data, args, ll.args))
     }
   } else {
-    data <- create_data_matrices(X)
     if (!local.linear) {
-      ret <- regression_predict_oob(
-        forest.short, train.data$train.matrix, train.data$sparse.train.matrix, train.data$outcome.index,
-        num.threads, estimate.variance
-      )
+      ret <- do.call.rcpp(regression_predict_oob, c(train.data, args))
     } else {
-      ret <- ll_regression_predict_oob(
-        forest.short, train.data$train.matrix, train.data$sparse.train.matrix, train.data$outcome.index,
-        ll.lambda, ll.weight.penalty, linear.correction.variables, num.threads, estimate.variance
-      )
+      ret <- do.call.rcpp(ll_regression_predict_oob, c(train.data, args, ll.args))
     }
   }
 

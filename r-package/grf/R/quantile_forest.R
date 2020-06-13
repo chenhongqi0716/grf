@@ -44,6 +44,7 @@
 #'  Only applies if honesty is enabled. Default is TRUE.
 #' @param alpha A tuning parameter that controls the maximum imbalance of a split. Default is 0.05.
 #' @param imbalance.penalty A tuning parameter that controls how harshly imbalanced splits are penalized. Default is 0.
+#' @param compute.oob.predictions Whether OOB predictions on training set should be precomputed. Default is FALSE.
 #' @param num.threads Number of threads used in training. By default, the number of threads is set
 #'                    to the maximum hardware concurrency.
 #' @param seed The seed of the C++ random number generator.
@@ -51,7 +52,7 @@
 #' @return A trained quantile forest object.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Generate data.
 #' n <- 50
 #' p <- 10
@@ -92,34 +93,48 @@ quantile_forest <- function(X, Y,
                             honesty.prune.leaves = TRUE,
                             alpha = 0.05,
                             imbalance.penalty = 0.0,
+                            compute.oob.predictions = FALSE,
                             num.threads = NULL,
                             seed = runif(1, 0, .Machine$integer.max)) {
-  if (!is.numeric(quantiles) | length(quantiles) < 1) {
+  if (!is.numeric(quantiles) || length(quantiles) < 1) {
     stop("Error: Must provide numeric quantiles")
-  } else if (min(quantiles) <= 0 | max(quantiles) >= 1) {
+  } else if (min(quantiles) <= 0 || max(quantiles) >= 1) {
     stop("Error: Quantiles must be in (0, 1)")
   }
 
-  validate_X(X)
+  has.missing.values <- validate_X(X, allow.na = TRUE)
   Y <- validate_observations(Y, X)
   clusters <- validate_clusters(clusters, X)
   samples.per.cluster <- validate_equalize_cluster_weights(equalize.cluster.weights, clusters, NULL)
   num.threads <- validate_num_threads(num.threads)
 
-  data <- create_data_matrices(X, outcome = Y)
-  ci.group.size <- 1
+  data <- create_train_matrices(X, outcome = Y)
+  args <- list(num.trees = num.trees,
+               quantiles = quantiles,
+               regression.splitting = regression.splitting,
+               clusters = clusters,
+               samples.per.cluster = samples.per.cluster,
+               sample.fraction = sample.fraction,
+               mtry = mtry,
+               min.node.size = min.node.size,
+               honesty = honesty,
+               honesty.fraction = honesty.fraction,
+               honesty.prune.leaves = honesty.prune.leaves,
+               alpha = alpha,
+               imbalance.penalty = imbalance.penalty,
+               ci.group.size = 1,
+               compute.oob.predictions = compute.oob.predictions,
+               num.threads = num.threads,
+               seed = seed)
 
-  forest <- quantile_train(
-    quantiles, regression.splitting, data$train.matrix, data$sparse.train.matrix, data$outcome.index, mtry,
-    num.trees, min.node.size, sample.fraction, honesty, honesty.fraction, honesty.prune.leaves,
-    ci.group.size, alpha, imbalance.penalty, clusters, samples.per.cluster, num.threads, seed
-  )
-
+  forest <- do.call.rcpp(quantile_train, c(data, args))
   class(forest) <- c("quantile_forest", "grf")
   forest[["X.orig"]] <- X
   forest[["Y.orig"]] <- Y
+  forest[["quantiles.orig"]] <- quantiles
   forest[["clusters"]] <- clusters
   forest[["equalize.cluster.weights"]] <- equalize.cluster.weights
+  forest[["has.missing.values"]] <- has.missing.values
   forest
 }
 
@@ -133,7 +148,8 @@ quantile_forest <- function(X, Y,
 #'                Xi using only trees that did not use the i-th training example). Note
 #'                that this matrix should have the number of columns as the training
 #'                matrix, and that the columns must appear in the same order.
-#' @param quantiles Vector of quantiles at which estimates are required.
+#' @param quantiles Vector of quantiles at which estimates are required. If NULL, the quantiles
+#'  used to train the forest is used. Default is NULL.
 #' @param num.threads Number of threads used in training. If set to NULL, the software
 #'                    automatically selects an appropriate amount.
 #' @param ... Additional arguments (currently ignored).
@@ -141,7 +157,7 @@ quantile_forest <- function(X, Y,
 #' @return Predictions at each test point for each desired quantile.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Train a quantile forest.
 #' n <- 50
 #' p <- 10
@@ -162,32 +178,38 @@ quantile_forest <- function(X, Y,
 #' @export
 predict.quantile_forest <- function(object,
                                     newdata = NULL,
-                                    quantiles = c(0.1, 0.5, 0.9),
+                                    quantiles = NULL,
                                     num.threads = NULL, ...) {
-  if (!is.numeric(quantiles) | length(quantiles) < 1) {
-    stop("Error: Must provide numeric quantiles")
-  } else if (min(quantiles) <= 0 | max(quantiles) >= 1) {
-    stop("Error: Quantiles must be in (0, 1)")
+  if (is.null(quantiles)) {
+    quantiles <- object[["quantiles.orig"]]
+  } else {
+    if (!is.numeric(quantiles) || length(quantiles) < 1) {
+      stop("Error: Must provide numeric quantiles")
+    } else if (min(quantiles) <= 0 || max(quantiles) >= 1) {
+      stop("Error: Quantiles must be in (0, 1)")
+    }
+  }
+
+  # If possible, use pre-computed predictions.
+  quantiles.orig <- object[["quantiles.orig"]]
+  if (is.null(newdata) && identical(quantiles, quantiles.orig) && !is.null(object$predictions)) {
+    return(object$predictions)
   }
 
   num.threads <- validate_num_threads(num.threads)
-
   forest.short <- object[-which(names(object) == "X.orig")]
-
   X <- object[["X.orig"]]
-  train.data <- create_data_matrices(X, outcome = object[["Y.orig"]])
+  train.data <- create_train_matrices(X, outcome = object[["Y.orig"]])
+
+  args <- list(forest.object = forest.short,
+               quantiles = quantiles,
+               num.threads = num.threads)
 
   if (!is.null(newdata)) {
-    validate_newdata(newdata, object$X.orig)
-    data <- create_data_matrices(newdata)
-    quantile_predict(
-      forest.short, quantiles, train.data$train.matrix, train.data$sparse.train.matrix,
-      train.data$outcome.index, data$train.matrix, data$sparse.train.matrix, num.threads
-    )
+    validate_newdata(newdata, object$X.orig, allow.na = TRUE)
+    test.data <- create_test_matrices(newdata)
+    do.call.rcpp(quantile_predict, c(train.data, test.data, args))
   } else {
-    quantile_predict_oob(
-      forest.short, quantiles, train.data$train.matrix, train.data$sparse.train.matrix,
-      train.data$outcome.index, num.threads
-    )
+    do.call.rcpp(quantile_predict_oob, c(train.data, args))
   }
 }

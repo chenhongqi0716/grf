@@ -21,7 +21,7 @@
 #' and there are 10 clusters with 19 units each and per-cluster ATE = 0, then
 #' the overall ATE is 0.05 (additional sample.weights allow for custom
 #' weighting). If equalize.cluster.weights = TRUE each cluster gets equal weight
-#' and the overall ATE is 0.5. 
+#' and the overall ATE is 0.5.
 #'
 #' @param forest The trained forest.
 #' @param target.sample Which sample to aggregate treatment effects over.
@@ -34,7 +34,7 @@
 #'               the treatment Wi or the outcome Yi.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Train a causal forest.
 #' n <- 50
 #' p <- 10
@@ -56,7 +56,7 @@
 #' average_treatment_effect(c.forest, target.sample = "treated")
 #'
 #' # Estimate the conditional average treatment effect on samples with positive X[,1].
-#' average_treatment_effect(c.forest, target.sample = "all", X[, 1] > 0)
+#' average_treatment_effect(c.forest, target.sample = "all", subset = X[, 1] > 0)
 #' }
 #'
 #' @return An estimate of the average treatment effect, along with standard error.
@@ -75,7 +75,7 @@ average_treatment_effect <- function(forest,
     stop("Average effect estimation only implemented for causal_forest")
   }
 
-  if (cluster.se & method == "TMLE") {
+  if (cluster.se && method == "TMLE") {
     stop("TMLE has not yet been implemented with clustered observations.")
   }
 
@@ -83,7 +83,7 @@ average_treatment_effect <- function(forest,
     subset <- 1:length(forest$Y.hat)
   }
 
-  if (class(subset) == "logical" & length(subset) == length(forest$Y.hat)) {
+  if (class(subset) == "logical" && length(subset) == length(forest$Y.hat)) {
     subset <- which(subset)
   }
 
@@ -109,6 +109,10 @@ average_treatment_effect <- function(forest,
   tau.hat.pointwise <- predict(forest)$predictions[subset]
   subset.clusters <- clusters[subset]
   subset.weights <- observation.weight[subset]
+
+  if (length(unique(subset.clusters)) <= 1) {
+    stop("The specified subset must contain units from more than one cluster.")
+  }
 
   # Address the overlap case separately, as this is a very different estimation problem.
   # The method argument (AIPW vs TMLE) is ignored in this case, as both methods are effectively

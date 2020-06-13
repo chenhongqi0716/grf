@@ -59,7 +59,6 @@ std::vector<Prediction> DefaultPredictionCollector::collect_predictions(
                                  std::ref(leaf_nodes_by_tree),
                                  std::ref(valid_trees_by_sample),
                                  estimate_variance,
-                                 estimate_error,
                                  start_index,
                                  num_samples_batch));
   }
@@ -81,11 +80,10 @@ std::vector<Prediction> DefaultPredictionCollector::collect_predictions_batch(
     const std::vector<std::vector<size_t>>& leaf_nodes_by_tree,
     const std::vector<std::vector<bool>>& valid_trees_by_sample,
     bool estimate_variance,
-    bool estimate_error,
     size_t start,
     size_t num_samples) const {
   size_t num_trees = forest.get_trees().size();
-  bool record_leaf_samples = estimate_variance || estimate_error;
+  bool record_leaf_samples = estimate_variance;
 
   std::vector<Prediction> predictions;
   predictions.reserve(num_samples);
@@ -94,6 +92,14 @@ std::vector<Prediction> DefaultPredictionCollector::collect_predictions_batch(
     std::unordered_map<size_t, double> weights_by_sample = weight_computer.compute_weights(
         sample, forest, leaf_nodes_by_tree, valid_trees_by_sample);
     std::vector<std::vector<size_t>> samples_by_tree;
+
+    // If this sample has no neighbors, then return placeholder predictions. Note
+    // that this can only occur when honesty is enabled, and is expected to be rare.
+    if (weights_by_sample.empty()) {
+      std::vector<double> nan(strategy->prediction_length(), NAN);
+      predictions.emplace_back(nan, nan, nan, nan);
+      continue;
+    }
 
     if (record_leaf_samples) {
       samples_by_tree.resize(num_trees);
@@ -106,7 +112,7 @@ std::vector<Prediction> DefaultPredictionCollector::collect_predictions_batch(
         size_t node = leaf_nodes.at(sample);
 
         const std::unique_ptr<Tree>& tree = forest.get_trees()[tree_index];
-        std::vector<std::vector<size_t>> leaf_samples = tree->get_leaf_samples();
+        const std::vector<std::vector<size_t>>& leaf_samples = tree->get_leaf_samples();
         samples_by_tree.push_back(leaf_samples.at(node));
       }
     }

@@ -16,6 +16,7 @@
  #-------------------------------------------------------------------------------*/
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <numeric>
 #include <iterator>
@@ -29,12 +30,11 @@ namespace grf {
 Data::Data() :
     num_rows(0),
     num_cols(0),
-    index_data(),
-    max_num_unique_values(0),
     outcome_index(),
     treatment_index(),
     instrument_index(),
-    weight_index() {}
+    weight_index(),
+    censor_index() {}
 
 bool Data::load_from_file(const std::string& filename) {
   bool result;
@@ -89,11 +89,11 @@ bool Data::load_from_whitespace_file(std::ifstream& input_file,
   std::string line;
   size_t row = 0;
   while (getline(input_file, line)) {
-    double token;
+    std::string token;
     std::stringstream line_stream(line);
     size_t column = 0;
     while (line_stream >> token) {
-      set(column, row, token, error);
+      set(column, row, std::stod(token), error);
       ++column;
     }
     if (column > num_cols) {
@@ -159,6 +159,11 @@ void Data::set_weight_index(size_t index) {
   disallowed_split_variables.insert(index);
 }
 
+void Data::set_censor_index(size_t index) {
+  this->censor_index = index;
+  disallowed_split_variables.insert(index);
+}
+
 void Data::get_all_values(std::vector<double>& all_values,
                           std::vector<size_t>& sorted_samples,
                           const std::vector<size_t>& samples,
@@ -174,57 +179,22 @@ void Data::get_all_values(std::vector<double>& all_values,
    // fill with [0, 1,..., samples.size() - 1]
   std::iota(index.begin(), index.end(), 0);
   // sort index based on the split values (argsort)
-  std::sort(index.begin(), index.end(), [&](const size_t& lhs, const size_t& rhs)
-    {return all_values[lhs] < all_values[rhs];});
+  // the NaN comparison places all NaNs at the beginning
+  // stable sort is needed for consistent element ordering cross platform,
+  // otherwise the resulting sums used in the splitting rules may compound rounding error
+  // differently and produce different splits.
+  std::stable_sort(index.begin(), index.end(), [&](const size_t& lhs, const size_t& rhs) {
+    return all_values[lhs] < all_values[rhs] || (std::isnan(all_values[lhs]) && !std::isnan(all_values[rhs]));
+  });
 
   for (size_t i = 0; i < samples.size(); i++) {
     sorted_samples[i] = samples[index[i]];
     all_values[i] = get(sorted_samples[i], var);
   }
 
-  all_values.erase(unique(all_values.begin(), all_values.end()), all_values.end());
-}
-
-size_t Data::get_index(size_t row, size_t col) const {
-  return index_data[col * num_rows + row];
-}
-
-void Data::sort() {
-  // Reserve memory
-  index_data.resize(num_cols * num_rows);
-
-  // For all columns, get unique values and save index for each observation
-  for (size_t col = 0; col < num_cols; ++col) {
-
-    // Get all unique values
-    std::vector<double> unique_values(num_rows);
-    for (size_t row = 0; row < num_rows; ++row) {
-      unique_values[row] = get(row, col);
-    }
-    std::sort(unique_values.begin(), unique_values.end());
-    unique_values.erase(unique(unique_values.begin(), unique_values.end()), unique_values.end());
-
-    // Get index of unique value
-    for (size_t row = 0; row < num_rows; ++row) {
-      size_t idx =
-          std::lower_bound(unique_values.begin(), unique_values.end(), get(row, col)) - unique_values.begin();
-      index_data[col * num_rows + row] = idx;
-    }
-
-    // Save unique values
-    unique_data_values.push_back(unique_values);
-    if (unique_values.size() > max_num_unique_values) {
-      max_num_unique_values = unique_values.size();
-    }
-  }
-}
-
-double Data::get_unique_data_value(size_t var, size_t index) const {
-  return unique_data_values[var][index];
-}
-
-size_t Data::get_num_unique_data_values(size_t var) const {
-  return unique_data_values[var].size();
+  all_values.erase(unique(all_values.begin(), all_values.end(), [&](const double& lhs, const double& rhs) {
+    return lhs == rhs || (std::isnan(lhs) && std::isnan(rhs));
+  }), all_values.end());
 }
 
 size_t Data::get_num_cols() const {
@@ -233,10 +203,6 @@ size_t Data::get_num_cols() const {
 
 size_t Data::get_num_rows() const {
   return num_rows;
-}
-
-size_t Data::get_max_num_unique_values() const {
-  return max_num_unique_values;
 }
 
 double Data::get_outcome(size_t row) const {
@@ -257,6 +223,10 @@ double Data::get_weight(size_t row) const {
   } else {
     return 1.0;
   }
+}
+
+bool Data::is_censored(size_t row) const {
+  return get(row, censor_index.value()) > 0.0;
 }
 
 const std::set<size_t>& Data::get_disallowed_split_variables() const {

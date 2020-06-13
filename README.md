@@ -1,8 +1,8 @@
+# generalized random forests <a href='https://grf-labs.github.io/grf/'><img src='https://raw.githubusercontent.com/grf-labs/grf/master/images/logo/grf_logo_wbg_cropped.png' align="right" height="120" /></a>
+
 [![CRANstatus](https://www.r-pkg.org/badges/version/grf)](https://cran.r-project.org/package=grf)
 ![CRAN Downloads overall](http://cranlogs.r-pkg.org/badges/grand-total/grf)
 [![Build Status](https://travis-ci.com/grf-labs/grf.svg?branch=master)](https://travis-ci.com/grf-labs/grf)
-
-# grf: generalized random forests
 
 A pluggable package for forest-based statistical estimation and inference. GRF currently provides non-parametric methods for least-squares regression, quantile regression, and treatment effect estimation (optionally using instrumental variables).
 
@@ -11,7 +11,7 @@ In addition, GRF supports 'honest' estimation (where one subset of the data is u
 Some helpful links for getting started:
 
 - The [R package documentation](https://grf-labs.github.io/grf) contains usage examples and method reference.
-- The [GRF reference](REFERENCE.md) gives a detailed description of the GRF algorithm and includes troubleshooting suggestions.
+- The [GRF reference](https://grf-labs.github.io/grf/REFERENCE.html) gives a detailed description of the GRF algorithm and includes troubleshooting suggestions.
 - For community questions and answers around usage, see [Github issues labelled 'question'](https://github.com/grf-labs/grf/issues?q=label%3Aquestion).
 
 The repository first started as a fork of the [ranger](https://github.com/imbs-hl/ranger) repository -- we owe a great deal of thanks to the ranger authors for their useful and free package.
@@ -27,7 +27,7 @@ install.packages("grf")
 Any published release can also be installed from source:
 
 ```R
-install.packages("https://raw.github.com/grf-labs/grf/master/releases/grf_1.0.1.tar.gz", repos = NULL, type = "source")
+install.packages("https://raw.github.com/grf-labs/grf/master/releases/grf_1.1.0.tar.gz", repos = NULL, type = "source")
 ```
 
 `conda` users can install from the [conda-forge](https://anaconda.org/conda-forge/r-grf) channel:
@@ -122,10 +122,36 @@ test_calibration(tau.forest)
 
 ### Developing
 
-In addition to providing out-of-the-box forests for quantile regression and causal effect estimation, GRF provides a framework for creating forests tailored to new statistical tasks. If you'd like to develop using GRF, please consult the [algorithm reference](REFERENCE.md) and [development guide](DEVELOPING.md).
+In addition to providing out-of-the-box forests for quantile regression and causal effect estimation, GRF provides a framework for creating forests tailored to new statistical tasks. If you'd like to develop using GRF, please consult the [algorithm reference](https://grf-labs.github.io/grf/REFERENCE.html) and [development guide](https://grf-labs.github.io/grf/DEVELOPING.html).
+
+### Funding
+
+Development of GRF is supported by the National Science Foundation, the Sloan Foundation, the Office of Naval Research (Grant N00014-17-1-2131) and Schmidt Futures.
 
 ### References
 
+Susan Athey and Stefan Wager.
+<b>Estimating Treatment Effects with Causal Forests: An Application.</b>
+<i>Observational Studies</i>, 5, 2019.
+[<a href="https://obsstudies.org/wp-content/uploads/2019/09/all-papers-compiled.pdf">paper</a>,
+<a href="https://arxiv.org/abs/1902.07409">arxiv</a>]
+
 Susan Athey, Julie Tibshirani and Stefan Wager.
-<b>Generalized Random Forests</b>, <i>Annals of Statistics</i> 47.2 (2019): 1148-1178.
-[<a href="https://arxiv.org/abs/1610.01271">arxiv</a>]
+<b>Generalized Random Forests.</b> <i>Annals of Statistics</i>, 47(2), 2019.
+[<a href="https://projecteuclid.org/euclid.aos/1547197251">paper</a>,
+<a href="https://arxiv.org/abs/1610.01271">arxiv</a>]
+
+Rina Friedberg, Julie Tibshirani, Susan Athey, and Stefan Wager.
+<b>Local Linear Forests.</b> 2018.
+[<a href="https://arxiv.org/abs/1807.11408">arxiv</a>]
+
+Imke Mayer, Erik Sverdrup, Tobias Gauss, Jean-Denis Moyer, Stefan Wager and Julie Josse.
+<b>Doubly Robust Treatment Effect Estimation with Missing Attributes.</b>
+<i>Annals of Applied Statistics</i>, forthcoming.
+[<a href="https://arxiv.org/pdf/1910.10624.pdf">arxiv</a>]
+
+Stefan Wager and Susan Athey.
+<b>Estimation and Inference of Heterogeneous Treatment Effects using Random Forests.</b>
+<i>Journal of the American Statistical Association</i>, 113(523), 2018.
+[<a href="https://www.tandfonline.com/eprint/v7p66PsDhHCYiPafTJwC/full">paper</a>,
+<a href="http://arxiv.org/abs/1510.04342">arxiv</a>]

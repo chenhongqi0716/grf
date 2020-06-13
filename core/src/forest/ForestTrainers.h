@@ -29,6 +29,14 @@ ForestTrainer quantile_trainer(const std::vector<double>& quantiles);
 
 ForestTrainer regression_trainer();
 
+ForestTrainer ll_regression_trainer(double split_lambda,
+                                   bool weight_penalty,
+                                   const std::vector<double>& overall_beta,
+                                   size_t ll_split_cutoff,
+                                   std::vector<size_t> ll_split_variables);
+
+ForestTrainer survival_trainer();
+
 ForestTrainer custom_trainer();
 
 } // namespace grf

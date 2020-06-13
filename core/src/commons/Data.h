@@ -39,8 +39,6 @@ public:
 
   virtual void set(size_t col, size_t row, double value, bool& error) = 0;
 
-  void sort();
-
   bool load_from_file(const std::string& filename);
 
   bool load_from_whitespace_file(std::ifstream& input_file, const std::string& first_line);
@@ -55,6 +53,8 @@ public:
 
   void set_weight_index(size_t index);
 
+  void set_censor_index(size_t index);
+
   /**
    * Sorts and gets the unique values in `samples` at variable `var`.
    *
@@ -65,20 +65,14 @@ public:
    *
    * If all the values in `samples` is unique, then `all_values` and `sorted_samples`
    * have the same length.
+   *
+   * If any of the covariates are NaN, they will be placed first in the returned sort order.
    */
   void get_all_values(std::vector<double>& all_values, std::vector<size_t>& sorted_samples, const std::vector<size_t>& samples, size_t var) const;
-
-  size_t get_index(size_t row, size_t col) const;
-
-  double get_unique_data_value(size_t var, size_t index) const;
-
-  size_t get_num_unique_data_values(size_t var) const;
 
   size_t get_num_cols() const;
 
   size_t get_num_rows() const;
-
-  size_t get_max_num_unique_values() const;
 
   double get_outcome(size_t row) const;
 
@@ -88,21 +82,20 @@ public:
 
   double get_weight(size_t row) const;
 
+  bool is_censored(size_t row) const;
+
   const std::set<size_t>& get_disallowed_split_variables() const;
 
 protected:
   size_t num_rows;
   size_t num_cols;
 
-  std::vector<size_t> index_data;
-  std::vector<std::vector<double>> unique_data_values;
-  size_t max_num_unique_values;
-
   std::set<size_t> disallowed_split_variables;
   nonstd::optional<size_t> outcome_index;
   nonstd::optional<size_t> treatment_index;
   nonstd::optional<size_t> instrument_index;
   nonstd::optional<size_t> weight_index;
+  nonstd::optional<size_t> censor_index;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(Data);

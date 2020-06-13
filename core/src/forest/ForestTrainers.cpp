@@ -20,11 +20,13 @@
 #include "prediction/RegressionPredictionStrategy.h"
 #include "relabeling/CustomRelabelingStrategy.h"
 #include "relabeling/InstrumentalRelabelingStrategy.h"
+#include "relabeling/LLRegressionRelabelingStrategy.h"
 #include "relabeling/NoopRelabelingStrategy.h"
 #include "relabeling/QuantileRelabelingStrategy.h"
 #include "splitting/factory/InstrumentalSplittingRuleFactory.h"
 #include "splitting/factory/ProbabilitySplittingRuleFactory.h"
 #include "splitting/factory/RegressionSplittingRuleFactory.h"
+#include "splitting/factory/SurvivalSplittingRuleFactory.h"
 
 namespace grf {
 
@@ -41,7 +43,7 @@ ForestTrainer instrumental_trainer(double reduced_form_weight,
                        std::move(splitting_rule_factory),
                        std::move(prediction_strategy));
 }
-  
+
 ForestTrainer quantile_trainer(const std::vector<double>& quantiles) {
     std::unique_ptr<RelabelingStrategy> relabeling_strategy(new QuantileRelabelingStrategy(quantiles));
   std::unique_ptr<SplittingRuleFactory> splitting_rule_factory(
@@ -60,6 +62,30 @@ ForestTrainer regression_trainer() {
   return ForestTrainer(std::move(relabeling_strategy),
                        std::move(splitting_rule_factory),
                        std::move(prediction_strategy));
+}
+
+ForestTrainer ll_regression_trainer(double split_lambda,
+                                   bool weight_penalty,
+                                   const std::vector<double>& overall_beta,
+                                   size_t ll_split_cutoff,
+                                   std::vector<size_t> ll_split_variables) {
+  std::unique_ptr<RelabelingStrategy> relabeling_strategy(new LLRegressionRelabelingStrategy(split_lambda, weight_penalty, overall_beta,
+                                                                                             ll_split_cutoff, ll_split_variables));
+  std::unique_ptr<SplittingRuleFactory> splitting_rule_factory(new RegressionSplittingRuleFactory());
+  std::unique_ptr<OptimizedPredictionStrategy> prediction_strategy(new RegressionPredictionStrategy());
+
+  return ForestTrainer(std::move(relabeling_strategy),
+                       std::move(splitting_rule_factory),
+                       std::move(prediction_strategy));
+}
+
+ForestTrainer survival_trainer() {
+  std::unique_ptr<RelabelingStrategy> relabeling_strategy(new NoopRelabelingStrategy());
+  std::unique_ptr<SplittingRuleFactory> splitting_rule_factory(new SurvivalSplittingRuleFactory());
+
+  return ForestTrainer(std::move(relabeling_strategy),
+                       std::move(splitting_rule_factory),
+                       nullptr);
 }
 
 ForestTrainer custom_trainer() {
