@@ -40,6 +40,20 @@ public:
                 uint num_threads,
                 uint random_seed,
                 const std::vector<size_t>& sample_clusters,
+                uint samples_per_cluster);
+  ForestOptions(uint num_trees,
+                size_t ci_group_size,
+                double sample_fraction,
+                uint mtry,
+                uint min_node_size,
+                bool honesty,
+                double honesty_fraction,
+                bool honesty_prune_leaves,
+                double alpha,
+                double imbalance_penalty,
+                uint num_threads,
+                uint random_seed,
+                const std::vector<size_t>& sample_clusters,
                 uint samples_per_cluster,
                 uint blocklength);
 

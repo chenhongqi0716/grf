@@ -37,8 +37,7 @@ ForestOptions::ForestOptions(uint num_trees,
                              uint num_threads,
                              uint random_seed,
                              const std::vector<size_t>& sample_clusters,
-                             uint samples_per_cluster,
-                             uint blocklength):
+                             uint samples_per_cluster):
     ci_group_size(ci_group_size),
     sample_fraction(sample_fraction),
     tree_options(mtry, min_node_size, honesty, honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty),
@@ -61,6 +60,24 @@ ForestOptions::ForestOptions(uint num_trees,
     std::random_device random_device;
     this->random_seed = random_device();
   }
+}
+
+ForestOptions::ForestOptions(uint num_trees,
+                             size_t ci_group_size,
+                             double sample_fraction,
+                             uint mtry,
+                             uint min_node_size,
+                             bool honesty,
+                             double honesty_fraction,
+                             bool honesty_prune_leaves,
+                             double alpha,
+                             double imbalance_penalty,
+                             uint num_threads,
+                             uint random_seed,
+                             const std::vector<size_t>& sample_clusters,
+                             uint samples_per_cluster,
+                             uint blocklength) {
+  // TODO
 }
 
 uint ForestOptions::get_num_trees() const {
