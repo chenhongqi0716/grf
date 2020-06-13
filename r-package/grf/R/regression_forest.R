@@ -109,8 +109,8 @@ regression_forest <- function(X, Y,
                               tune.num.draws = 1000,
                               compute.oob.predictions = TRUE,
                               num.threads = NULL,
-                              seed = runif(1, 0, .Machine$integer.max)
-                              blocklength = floor((nrow(X))^(1/3)) ) {
+                              seed = runif(1, 0, .Machine$integer.max),
+                              blocklength = floor((nrow(X))^(1/3))) {
   has.missing.values <- validate_X(X, allow.na = TRUE)
   validate_sample_weights(sample.weights, X)
   Y <- validate_observations(Y, X)
