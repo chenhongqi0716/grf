@@ -47,6 +47,8 @@ public:
    * training trees.
    */
   uint get_samples_per_cluster() const;
+  
+  uint get_block_length() const;
 
 private:
   std::vector<double> sample_weights;
