@@ -33,7 +33,7 @@ public:
                   const std::vector<size_t>& clusters);
   SamplingOptions(uint samples_per_cluster,
                   const std::vector<size_t>& clusters,
-                  unit blocklength);
+                  uint blocklength);
 
   const std::vector<double>& get_sample_weights() const;
 

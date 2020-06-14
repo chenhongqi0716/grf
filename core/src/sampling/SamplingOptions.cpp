@@ -51,7 +51,7 @@ SamplingOptions::SamplingOptions(uint samples_per_cluster,
 
 SamplingOptions::SamplingOptions(uint samples_per_cluster,
                                  const std::vector<size_t>& sample_clusters,
-                                 unit blocklength):
+                                 uint blocklength):
 sample_weights(0),
 num_samples_per_cluster(samples_per_cluster) {
   //copy from above, add blocklength
