@@ -52,6 +52,7 @@ private:
   std::vector<double> sample_weights;
   uint num_samples_per_cluster;
   std::vector<std::vector<size_t>> clusters;
+  uint block_length = 0;
 };
 
 } // namespace grf
