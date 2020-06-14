@@ -80,7 +80,7 @@ ForestOptions::ForestOptions(uint num_trees,
     ci_group_size(ci_group_size),
     sample_fraction(sample_fraction),
     tree_options(mtry, min_node_size, honesty, honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty),
-    sampling_options(samples_per_cluster, sample_clusters, blocklength)
+    sampling_options(samples_per_cluster, sample_clusters, blocklength),
     ForestOptions(num_trees, ci_group_size, sample_fraction, mtry, min_node_size,
               honesty, honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty,
               num_threads, random_seed, sample_clusters, samples_per_cluster){
