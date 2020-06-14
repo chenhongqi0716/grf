@@ -84,7 +84,7 @@ ForestOptions::ForestOptions(uint num_trees,
   
     ForestOptions(num_trees, ci_group_size, sample_fraction, mtry, min_node_size,
                 honesty, honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty,
-                num_threads, random_seed, sample_clusters, samples_per_cluster)
+                num_threads, random_seed, sample_clusters, samples_per_cluster);
 }
 
 uint ForestOptions::get_num_trees() const {
