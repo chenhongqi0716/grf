@@ -88,6 +88,10 @@ const std::vector<std::vector<size_t>>& SamplingOptions::get_clusters() const {
 
 unsigned int SamplingOptions::get_block_length() const {
   return block_length;  
-}  
+}
+
+void SamplingOptions::set_block_length(uint block_length) {
+  block_length = _block_length;
+}
  
 } // namespace grf
