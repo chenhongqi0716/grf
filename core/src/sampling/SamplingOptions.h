@@ -49,6 +49,7 @@ public:
   uint get_samples_per_cluster() const;
   
   uint get_block_length() const;
+  void set_block_length(uint _block_length);
 
 private:
   std::vector<double> sample_weights;
