@@ -90,7 +90,7 @@ unsigned int SamplingOptions::get_block_length() const {
   return block_length;  
 }
 
-void SamplingOptions::set_block_length(uint block_length) {
+void SamplingOptions::set_block_length(uint _block_length) {
   block_length = _block_length;
 }
  
