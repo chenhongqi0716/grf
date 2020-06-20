@@ -96,7 +96,8 @@ quantile_forest <- function(X, Y,
                             compute.oob.predictions = FALSE,
                             num.threads = NULL,
                             seed = runif(1, 0, .Machine$integer.max),
-                            blocklength = floor((nrow(X))^(1/3)) ) {
+                            blocklength = floor((nrow(X))^(1/3)),
+                            blcoknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
   if (!is.numeric(quantiles) || length(quantiles) < 1) {
     stop("Error: Must provide numeric quantiles")
   } else if (min(quantiles) <= 0 || max(quantiles) >= 1) {
@@ -127,7 +128,8 @@ quantile_forest <- function(X, Y,
                compute.oob.predictions = compute.oob.predictions,
                num.threads = num.threads,
                seed = seed,
-               blocklength = blocklength)
+               blocklength = blocklength,
+               blocknum = blocknum)
 
   forest <- do.call.rcpp(quantile_train, c(data, args))
   class(forest) <- c("quantile_forest", "grf")
