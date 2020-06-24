@@ -131,6 +131,7 @@ quantile_forest <- function(X, Y,
                  seed = seed)
   }
   else{
+    sample.fraction = 1
     data <- create_train_matrices(X, outcome = Y)
     args <- list(num.trees = num.trees,
                  quantiles = quantiles,
