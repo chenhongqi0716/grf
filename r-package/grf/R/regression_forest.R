@@ -110,63 +110,113 @@ regression_forest <- function(X, Y,
                               compute.oob.predictions = TRUE,
                               num.threads = NULL,
                               seed = runif(1, 0, .Machine$integer.max),
+                              mbb = FALSE,
                               blocklength = floor((nrow(X))^(1/3)),
-                              blcoknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
+                              blocknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
   has.missing.values <- validate_X(X, allow.na = TRUE)
   validate_sample_weights(sample.weights, X)
   Y <- validate_observations(Y, X)
   clusters <- validate_clusters(clusters, X)
   samples.per.cluster <- validate_equalize_cluster_weights(equalize.cluster.weights, clusters, sample.weights)
   num.threads <- validate_num_threads(num.threads)
-
-  all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
-                          "honesty.prune.leaves", "alpha", "imbalance.penalty")
-
-  data <- create_train_matrices(X, outcome = Y, sample.weights = sample.weights)
-  args <- list(num.trees = num.trees,
-               clusters = clusters,
-               samples.per.cluster = samples.per.cluster,
-               sample.fraction = sample.fraction,
-               mtry = mtry,
-               min.node.size = min.node.size,
-               honesty = honesty,
-               honesty.fraction = honesty.fraction,
-               honesty.prune.leaves = honesty.prune.leaves,
-               alpha = alpha,
-               imbalance.penalty = imbalance.penalty,
-               ci.group.size = ci.group.size,
-               compute.oob.predictions = compute.oob.predictions,
-               num.threads = num.threads,
-               seed = seed,
-               blocklength = blocklength,
-               blocknum = blocknum)
-
-  tuning.output <- NULL
-  if (!identical(tune.parameters, "none")){
-    tuning.output <- tune_regression_forest(X, Y,
-                                            sample.weights = sample.weights,
-                                            clusters = clusters,
-                                            equalize.cluster.weights = equalize.cluster.weights,
-                                            sample.fraction = sample.fraction,
-                                            mtry = mtry,
-                                            min.node.size = min.node.size,
-                                            honesty = honesty,
-                                            honesty.fraction = honesty.fraction,
-                                            honesty.prune.leaves = honesty.prune.leaves,
-                                            alpha = alpha,
-                                            imbalance.penalty = imbalance.penalty,
-                                            ci.group.size = ci.group.size,
-                                            tune.parameters = tune.parameters,
-                                            tune.num.trees = tune.num.trees,
-                                            tune.num.reps = tune.num.reps,
-                                            tune.num.draws = tune.num.draws,
-                                            num.threads = num.threads,
-                                            seed = seed,
-                                            blocklength = blocklength,
-                                            blocknum = blocknum)
-    args <- modifyList(args, as.list(tuning.output[["params"]]))
+  if (mbb == FALSE){
+    all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
+                            "honesty.prune.leaves", "alpha", "imbalance.penalty")
+  
+    data <- create_train_matrices(X, outcome = Y, sample.weights = sample.weights)
+    args <- list(num.trees = num.trees,
+                 clusters = clusters,
+                 samples.per.cluster = samples.per.cluster,
+                 sample.fraction = sample.fraction,
+                 mtry = mtry,
+                 min.node.size = min.node.size,
+                 honesty = honesty,
+                 honesty.fraction = honesty.fraction,
+                 honesty.prune.leaves = honesty.prune.leaves,
+                 alpha = alpha,
+                 imbalance.penalty = imbalance.penalty,
+                 ci.group.size = ci.group.size,
+                 compute.oob.predictions = compute.oob.predictions,
+                 num.threads = num.threads,
+                 seed = seed)
+  
+    tuning.output <- NULL
+    if (!identical(tune.parameters, "none")){
+      tuning.output <- tune_regression_forest(X, Y,
+                                              sample.weights = sample.weights,
+                                              clusters = clusters,
+                                              equalize.cluster.weights = equalize.cluster.weights,
+                                              sample.fraction = sample.fraction,
+                                              mtry = mtry,
+                                              min.node.size = min.node.size,
+                                              honesty = honesty,
+                                              honesty.fraction = honesty.fraction,
+                                              honesty.prune.leaves = honesty.prune.leaves,
+                                              alpha = alpha,
+                                              imbalance.penalty = imbalance.penalty,
+                                              ci.group.size = ci.group.size,
+                                              tune.parameters = tune.parameters,
+                                              tune.num.trees = tune.num.trees,
+                                              tune.num.reps = tune.num.reps,
+                                              tune.num.draws = tune.num.draws,
+                                              num.threads = num.threads,
+                                              seed = seed)
+      args <- modifyList(args, as.list(tuning.output[["params"]]))
+    }
   }
-
+  else{
+    sample.fraction = 1
+    all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
+                            "honesty.prune.leaves", "alpha", "imbalance.penalty")
+    
+    data <- create_train_matrices(X, outcome = Y, sample.weights = sample.weights)
+    args <- list(num.trees = num.trees,
+                 clusters = clusters,
+                 samples.per.cluster = samples.per.cluster,
+                 sample.fraction = sample.fraction,
+                 mtry = mtry,
+                 min.node.size = min.node.size,
+                 honesty = honesty,
+                 honesty.fraction = honesty.fraction,
+                 honesty.prune.leaves = honesty.prune.leaves,
+                 alpha = alpha,
+                 imbalance.penalty = imbalance.penalty,
+                 ci.group.size = ci.group.size,
+                 compute.oob.predictions = compute.oob.predictions,
+                 num.threads = num.threads,
+                 seed = seed,
+                 blocklength = blocklength,
+                 blocknum = blocknum)
+    
+    tuning.output <- NULL
+    if (!identical(tune.parameters, "none")){
+      tuning.output <- tune_regression_forest(X, Y,
+                                              sample.weights = sample.weights,
+                                              clusters = clusters,
+                                              equalize.cluster.weights = equalize.cluster.weights,
+                                              sample.fraction = sample.fraction,
+                                              mtry = mtry,
+                                              min.node.size = min.node.size,
+                                              honesty = honesty,
+                                              honesty.fraction = honesty.fraction,
+                                              honesty.prune.leaves = honesty.prune.leaves,
+                                              alpha = alpha,
+                                              imbalance.penalty = imbalance.penalty,
+                                              ci.group.size = ci.group.size,
+                                              tune.parameters = tune.parameters,
+                                              tune.num.trees = tune.num.trees,
+                                              tune.num.reps = tune.num.reps,
+                                              tune.num.draws = tune.num.draws,
+                                              num.threads = num.threads,
+                                              seed = seed,
+                                              mbb = mbb,
+                                              blocklength = blocklength,
+                                              blocknum = blocknum)
+      args <- modifyList(args, as.list(tuning.output[["params"]]))
+    }
+  }
+  
+  
   forest <- do.call.rcpp(regression_train, c(data, args))
   class(forest) <- c("regression_forest", "grf")
   forest[["ci.group.size"]] <- ci.group.size
