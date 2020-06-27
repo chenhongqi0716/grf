@@ -49,7 +49,6 @@ SamplingOptions::SamplingOptions(uint samples_per_cluster,
   }
 }
 
-
 const std::vector<double>& SamplingOptions::get_sample_weights() const {
   return sample_weights;
 }
