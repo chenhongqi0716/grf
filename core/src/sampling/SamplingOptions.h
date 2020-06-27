@@ -31,9 +31,6 @@ public:
   SamplingOptions();
   SamplingOptions(uint samples_per_cluster,
                   const std::vector<size_t>& clusters);
-  SamplingOptions(uint samples_per_cluster,
-                  const std::vector<size_t>& clusters,
-                  uint blocklength);
 
   const std::vector<double>& get_sample_weights() const;
 
@@ -49,13 +46,16 @@ public:
   uint get_samples_per_cluster() const;
   
   uint get_block_length() const;
+  uint get_block_num() const;
   void set_block_length(uint _block_length);
+  void set_block_num(uint _block_num);
 
 private:
   std::vector<double> sample_weights;
   uint num_samples_per_cluster;
   std::vector<std::vector<size_t>> clusters;
   uint block_length = 0;
+  uint block_num = 0;
 };
 
 } // namespace grf

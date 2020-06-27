@@ -43,8 +43,7 @@ void RandomSampler::sample(size_t num_samples,
   if (options.get_sample_weights().empty()) {
     size_t block_length = options.get_block_length();
     if (block_length)
-      // TODO: Determine the definition of num_samples_inbag and sample_fraction here.
-      shuffle_and_split_block(samples, num_samples, num_samples_inbag, block_length);
+      shuffle_and_split_block(samples, num_samples, options.get_block_num(), block_length);
     else
       shuffle_and_split(samples, num_samples, num_samples_inbag);
   } else {

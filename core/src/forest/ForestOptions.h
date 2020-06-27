@@ -55,7 +55,8 @@ public:
                 uint random_seed,
                 const std::vector<size_t>& sample_clusters,
                 uint samples_per_cluster,
-                uint blocklength);
+                uint blocklength,
+                uint blocknum);
 
   static uint validate_num_threads(uint num_threads);
 

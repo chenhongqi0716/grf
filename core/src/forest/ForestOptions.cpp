@@ -76,11 +76,13 @@ ForestOptions::ForestOptions(uint num_trees,
                              uint random_seed,
                              const std::vector<size_t>& sample_clusters,
                              uint samples_per_cluster,
-                             uint blocklength):
+                             uint blocklength,
+                             uint blocknum):
     ForestOptions(num_trees, ci_group_size, sample_fraction, mtry, min_node_size,
               honesty, honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty,
               num_threads, random_seed, sample_clusters, samples_per_cluster){
     sampling_options.set_block_length(blocklength);
+    sampling_options.set_block_num(blocknum);
 }
 
 uint ForestOptions::get_num_trees() const {
