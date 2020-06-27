@@ -165,7 +165,6 @@ regression_forest <- function(X, Y,
     }
   }
   else{
-    sample.fraction = 1
     all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
                             "honesty.prune.leaves", "alpha", "imbalance.penalty")
     
