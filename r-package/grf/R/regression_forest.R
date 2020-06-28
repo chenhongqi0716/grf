@@ -59,6 +59,9 @@
 #' @param num.threads Number of threads used in training. By default, the number of threads is set
 #'                    to the maximum hardware concurrency.
 #' @param seed The seed of the C++ random number generator.
+#' @param mbb The options of moving block-bootstrap. Default is FALSE. When mbb is TRUE, sample.fraction is invalid.
+#' @param blocklength The length of block. Only valid when mbb is TRUE. By default, the number is floor((nrow(X))^(1/3)).
+#' @param blocknum The number of blocks. Only valid when mbb is TRUE. The default is the floor of the ratio of nrow(X) and default value of blocklength.
 #'
 #' @return A trained regression forest object. If tune.parameters is enabled,
 #'  then tuning information will be included through the `tuning.output` attribute.
