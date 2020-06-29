@@ -125,7 +125,7 @@ regression_forest <- function(X, Y,
 
   all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
                           "honesty.prune.leaves", "alpha", "imbalance.penalty")
-  
+
   data <- create_train_matrices(X, outcome = Y, sample.weights = sample.weights)
   args <- list(num.trees = num.trees,
                clusters = clusters,
