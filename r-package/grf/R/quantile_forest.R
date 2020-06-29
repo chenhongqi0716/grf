@@ -48,6 +48,9 @@
 #' @param num.threads Number of threads used in training. By default, the number of threads is set
 #'                    to the maximum hardware concurrency.
 #' @param seed The seed of the C++ random number generator.
+#' @param mbb The options of moving block-bootstrap. Default is FALSE. When mbb is TRUE, sample.fraction is invalid.
+#' @param blocklength The length of block. Only valid when mbb is TRUE. By default, the number is floor((nrow(X))^(1/3)).
+#' @param blocknum The number of blocks. Only valid when mbb is TRUE. The default is the floor of the ratio of nrow(X) and default value of blocklength.
 #'
 #' @return A trained quantile forest object.
 #'
@@ -95,7 +98,10 @@ quantile_forest <- function(X, Y,
                             imbalance.penalty = 0.0,
                             compute.oob.predictions = FALSE,
                             num.threads = NULL,
-                            seed = runif(1, 0, .Machine$integer.max)) {
+                            seed = runif(1, 0, .Machine$integer.max),
+                            mbb = FALSE,
+                            blocklength = floor((nrow(X))^(1/3)),
+                            blcoknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
   if (!is.numeric(quantiles) || length(quantiles) < 1) {
     stop("Error: Must provide numeric quantiles")
   } else if (min(quantiles) <= 0 || max(quantiles) >= 1) {
@@ -107,25 +113,49 @@ quantile_forest <- function(X, Y,
   clusters <- validate_clusters(clusters, X)
   samples.per.cluster <- validate_equalize_cluster_weights(equalize.cluster.weights, clusters, NULL)
   num.threads <- validate_num_threads(num.threads)
-
-  data <- create_train_matrices(X, outcome = Y)
-  args <- list(num.trees = num.trees,
-               quantiles = quantiles,
-               regression.splitting = regression.splitting,
-               clusters = clusters,
-               samples.per.cluster = samples.per.cluster,
-               sample.fraction = sample.fraction,
-               mtry = mtry,
-               min.node.size = min.node.size,
-               honesty = honesty,
-               honesty.fraction = honesty.fraction,
-               honesty.prune.leaves = honesty.prune.leaves,
-               alpha = alpha,
-               imbalance.penalty = imbalance.penalty,
-               ci.group.size = 1,
-               compute.oob.predictions = compute.oob.predictions,
-               num.threads = num.threads,
-               seed = seed)
+  if (mbb == FALSE){
+    data <- create_train_matrices(X, outcome = Y)
+    args <- list(num.trees = num.trees,
+                 quantiles = quantiles,
+                 regression.splitting = regression.splitting,
+                 clusters = clusters,
+                 samples.per.cluster = samples.per.cluster,
+                 sample.fraction = sample.fraction,
+                 mtry = mtry,
+                 min.node.size = min.node.size,
+                 honesty = honesty,
+                 honesty.fraction = honesty.fraction,
+                 honesty.prune.leaves = honesty.prune.leaves,
+                 alpha = alpha,
+                 imbalance.penalty = imbalance.penalty,
+                 ci.group.size = 1,
+                 compute.oob.predictions = compute.oob.predictions,
+                 num.threads = num.threads,
+                 seed = seed)
+  }
+  else{
+    sample.fraction = 1
+    data <- create_train_matrices(X, outcome = Y)
+    args <- list(num.trees = num.trees,
+                 quantiles = quantiles,
+                 regression.splitting = regression.splitting,
+                 clusters = clusters,
+                 samples.per.cluster = samples.per.cluster,
+                 sample.fraction = sample.fraction,
+                 mtry = mtry,
+                 min.node.size = min.node.size,
+                 honesty = honesty,
+                 honesty.fraction = honesty.fraction,
+                 honesty.prune.leaves = honesty.prune.leaves,
+                 alpha = alpha,
+                 imbalance.penalty = imbalance.penalty,
+                 ci.group.size = 1,
+                 compute.oob.predictions = compute.oob.predictions,
+                 num.threads = num.threads,
+                 seed = seed,
+                 blocklength = blocklength,
+                 blocknum = blocknum)
+  }
 
   forest <- do.call.rcpp(quantile_train, c(data, args))
   class(forest) <- c("quantile_forest", "grf")

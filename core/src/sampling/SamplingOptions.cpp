@@ -62,4 +62,20 @@ const std::vector<std::vector<size_t>>& SamplingOptions::get_clusters() const {
   return clusters;
 }
 
+unsigned int SamplingOptions::get_block_length() const {
+  return block_length;  
+}
+
+void SamplingOptions::set_block_length(uint _block_length) {
+  block_length = _block_length;
+}
+
+void SamplingOptions::set_block_num(uint _block_num) {
+  block_num = _block_num;
+}
+
+uint SamplingOptions::get_block_num() const {
+  return block_num;
+}
+
 } // namespace grf

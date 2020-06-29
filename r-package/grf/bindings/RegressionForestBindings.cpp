@@ -48,7 +48,10 @@ Rcpp::List regression_train(Rcpp::NumericMatrix train_matrix,
                             unsigned int samples_per_cluster,
                             bool compute_oob_predictions,
                             unsigned int num_threads,
-                            unsigned int seed) {
+                            unsigned int seed,
+                            bool mbb,
+                            unsigned int blocklength,
+                            unsigned int blocknum) {
   ForestTrainer trainer = regression_trainer();
 
   std::unique_ptr<Data> data = RcppUtilities::convert_data(train_matrix, sparse_train_matrix);
@@ -58,7 +61,13 @@ Rcpp::List regression_train(Rcpp::NumericMatrix train_matrix,
   }
 
   ForestOptions options(num_trees, ci_group_size, sample_fraction, mtry, min_node_size, honesty,
-      honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty, num_threads, seed, clusters, samples_per_cluster);
+                        honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty, num_threads, seed, clusters, samples_per_cluster);
+  if(mbb){
+      options = ForestOptions{num_trees, ci_group_size, sample_fraction, mtry, min_node_size, honesty,
+          honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty, num_threads, seed, clusters, samples_per_cluster,
+          blocklength, blocknum};
+  }
+
   Forest forest = trainer.train(*data, options);
 
   std::vector<Prediction> predictions;

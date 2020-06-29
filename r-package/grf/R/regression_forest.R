@@ -59,6 +59,9 @@
 #' @param num.threads Number of threads used in training. By default, the number of threads is set
 #'                    to the maximum hardware concurrency.
 #' @param seed The seed of the C++ random number generator.
+#' @param mbb The options of moving block-bootstrap. Default is FALSE. When mbb is TRUE, sample.fraction is invalid.
+#' @param blocklength The length of block. Only valid when mbb is TRUE. By default, the number is floor((nrow(X))^(1/3)).
+#' @param blocknum The number of blocks. Only valid when mbb is TRUE. The default is the floor of the ratio of nrow(X) and default value of blocklength.
 #'
 #' @return A trained regression forest object. If tune.parameters is enabled,
 #'  then tuning information will be included through the `tuning.output` attribute.
@@ -109,7 +112,10 @@ regression_forest <- function(X, Y,
                               tune.num.draws = 1000,
                               compute.oob.predictions = TRUE,
                               num.threads = NULL,
-                              seed = runif(1, 0, .Machine$integer.max)) {
+                              seed = runif(1, 0, .Machine$integer.max),
+                              mbb = FALSE,
+                              blocklength = floor((nrow(X))^(1/3)),
+                              blocknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
   has.missing.values <- validate_X(X, allow.na = TRUE)
   validate_sample_weights(sample.weights, X)
   Y <- validate_observations(Y, X)
@@ -135,8 +141,11 @@ regression_forest <- function(X, Y,
                ci.group.size = ci.group.size,
                compute.oob.predictions = compute.oob.predictions,
                num.threads = num.threads,
-               seed = seed)
-
+               seed = seed,
+               mbb = mbb,
+               blocklength = blocklength,
+               blocknum = blocknum)
+  
   tuning.output <- NULL
   if (!identical(tune.parameters, "none")){
     tuning.output <- tune_regression_forest(X, Y,
@@ -157,7 +166,10 @@ regression_forest <- function(X, Y,
                                             tune.num.reps = tune.num.reps,
                                             tune.num.draws = tune.num.draws,
                                             num.threads = num.threads,
-                                            seed = seed)
+                                            seed = seed,
+                                            mbb = mbb,
+                                            blocklength = blocklength,
+                                            blocknum = blocknum)
     args <- modifyList(args, as.list(tuning.output[["params"]]))
   }
 

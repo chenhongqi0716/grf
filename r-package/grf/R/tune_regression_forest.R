@@ -98,7 +98,10 @@ tune_regression_forest <- function(X, Y,
                                   tune.num.reps = 100,
                                   tune.num.draws = 1000,
                                   num.threads = NULL,
-                                  seed = runif(1, 0, .Machine$integer.max)) {
+                                  seed = runif(1, 0, .Machine$integer.max),
+                                  mbb = FALSE,
+                                  blocklength = floor((nrow(X))^(1/3)),
+                                  blcoknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ) {
   validate_X(X, allow.na = TRUE)
   validate_sample_weights(sample.weights, X)
   Y <- validate_observations(Y, X)
@@ -106,46 +109,92 @@ tune_regression_forest <- function(X, Y,
   samples.per.cluster <- validate_equalize_cluster_weights(equalize.cluster.weights, clusters, sample.weights)
   num.threads <- validate_num_threads(num.threads)
 
-  all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
-                          "honesty.prune.leaves", "alpha", "imbalance.penalty")
-
-  default.parameters <- list(sample.fraction = 0.5,
-                             mtry = min(ceiling(sqrt(ncol(X)) + 20), ncol(X)),
-                             min.node.size = 5,
-                             honesty.fraction = 0.5,
-                             honesty.prune.leaves = TRUE,
-                             alpha = 0.05,
-                             imbalance.penalty = 0)
-
-  data <- create_train_matrices(X, outcome = Y, sample.weights = sample.weights)
-  nrow.X <- nrow(X)
-  ncol.X <- ncol(X)
-  args <- list(clusters = clusters,
-               samples.per.cluster = samples.per.cluster,
-               sample.fraction = sample.fraction,
-               mtry = mtry,
-               min.node.size = min.node.size,
-               honesty = honesty,
-               honesty.fraction = honesty.fraction,
-               honesty.prune.leaves = honesty.prune.leaves,
-               alpha = alpha,
-               imbalance.penalty = imbalance.penalty,
-               ci.group.size = ci.group.size,
-               num.threads = num.threads,
-               seed = seed)
-
-  if (identical(tune.parameters, "all")) {
-    tune.parameters <- all.tunable.params
-  } else {
-    tune.parameters <- unique(match.arg(tune.parameters, all.tunable.params, several.ok = TRUE))
+  
+  if (mbb == FALSE){
+    all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
+                            "honesty.prune.leaves", "alpha", "imbalance.penalty")
+  
+    default.parameters <- list(sample.fraction = 0.5,
+                               mtry = min(ceiling(sqrt(ncol(X)) + 20), ncol(X)),
+                               min.node.size = 5,
+                               honesty.fraction = 0.5,
+                               honesty.prune.leaves = TRUE,
+                               alpha = 0.05,
+                               imbalance.penalty = 0)
+  
+    data <- create_train_matrices(X, outcome = Y, sample.weights = sample.weights)
+    nrow.X <- nrow(X)
+    ncol.X <- ncol(X)
+    args <- list(clusters = clusters,
+                 samples.per.cluster = samples.per.cluster,
+                 sample.fraction = sample.fraction,
+                 mtry = mtry,
+                 min.node.size = min.node.size,
+                 honesty = honesty,
+                 honesty.fraction = honesty.fraction,
+                 honesty.prune.leaves = honesty.prune.leaves,
+                 alpha = alpha,
+                 imbalance.penalty = imbalance.penalty,
+                 ci.group.size = ci.group.size,
+                 num.threads = num.threads,
+                 seed = seed)
+  
+    if (identical(tune.parameters, "all")) {
+      tune.parameters <- all.tunable.params
+    } else {
+      tune.parameters <- unique(match.arg(tune.parameters, all.tunable.params, several.ok = TRUE))
+    }
+    if (!honesty) {
+      tune.parameters <- tune.parameters[!grepl("honesty", tune.parameters)]
+    }
+  
+    tune.parameters.defaults <- default.parameters[tune.parameters]
+    train <- regression_train
   }
-  if (!honesty) {
-    tune.parameters <- tune.parameters[!grepl("honesty", tune.parameters)]
+  else{
+    sample.fraction = 1
+    all.tunable.params <- c("sample.fraction", "mtry", "min.node.size", "honesty.fraction",
+                            "honesty.prune.leaves", "alpha", "imbalance.penalty")
+    
+    default.parameters <- list(sample.fraction = 0.5,
+                               mtry = min(ceiling(sqrt(ncol(X)) + 20), ncol(X)),
+                               min.node.size = 5,
+                               honesty.fraction = 0.5,
+                               honesty.prune.leaves = TRUE,
+                               alpha = 0.05,
+                               imbalance.penalty = 0)
+    
+    data <- create_train_matrices(X, outcome = Y, sample.weights = sample.weights)
+    nrow.X <- nrow(X)
+    ncol.X <- ncol(X)
+    args <- list(clusters = clusters,
+                 samples.per.cluster = samples.per.cluster,
+                 sample.fraction = sample.fraction,
+                 mtry = mtry,
+                 min.node.size = min.node.size,
+                 honesty = honesty,
+                 honesty.fraction = honesty.fraction,
+                 honesty.prune.leaves = honesty.prune.leaves,
+                 alpha = alpha,
+                 imbalance.penalty = imbalance.penalty,
+                 ci.group.size = ci.group.size,
+                 num.threads = num.threads,
+                 seed = seed,
+                 blocklength = blocklength,
+                 blocknum = blcoknum)
+    
+    if (identical(tune.parameters, "all")) {
+      tune.parameters <- all.tunable.params
+    } else {
+      tune.parameters <- unique(match.arg(tune.parameters, all.tunable.params, several.ok = TRUE))
+    }
+    if (!honesty) {
+      tune.parameters <- tune.parameters[!grepl("honesty", tune.parameters)]
+    }
+    
+    tune.parameters.defaults <- default.parameters[tune.parameters]
+    train <- regression_train
   }
-
-  tune.parameters.defaults <- default.parameters[tune.parameters]
-  train <- regression_train
-
   tuning.output <- tune_forest(data = data,
                                nrow.X = nrow.X,
                                ncol.X = ncol.X,
