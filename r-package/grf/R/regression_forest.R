@@ -114,6 +114,7 @@ regression_forest <- function(X, Y,
                               num.threads = NULL,
                               seed = runif(1, 0, .Machine$integer.max),
                               mbb = FALSE,
+                              nonoverlap = FALSE,
                               blocklength = floor((nrow(X))^(1/3)),
                               blocknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
   has.missing.values <- validate_X(X, allow.na = TRUE)
@@ -143,6 +144,7 @@ regression_forest <- function(X, Y,
                num.threads = num.threads,
                seed = seed,
                mbb = mbb,
+               nonoverlap = nonoverlap,
                blocklength = blocklength,
                blocknum = blocknum)
   
@@ -168,6 +170,7 @@ regression_forest <- function(X, Y,
                                             num.threads = num.threads,
                                             seed = seed,
                                             mbb = mbb,
+                                            nonoverlap = nonoverlap,
                                             blocklength = blocklength,
                                             blocknum = blocknum)
     args <- modifyList(args, as.list(tuning.output[["params"]]))
