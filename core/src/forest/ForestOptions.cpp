@@ -76,6 +76,7 @@ ForestOptions::ForestOptions(uint num_trees,
                              uint random_seed,
                              const std::vector<size_t>& sample_clusters,
                              uint samples_per_cluster,
+                             bool nonoverlap,
                              uint blocklength,
                              uint blocknum):
     ForestOptions(num_trees, ci_group_size, sample_fraction, mtry, min_node_size,
