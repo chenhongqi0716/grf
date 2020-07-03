@@ -48,12 +48,7 @@ Rcpp::List quantile_train(std::vector<double> quantiles,
   if(mbb){
     options = ForestOptions{num_trees, ci_group_size, sample_fraction, mtry, min_node_size, honesty,
                             honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty, num_threads, seed, clusters, samples_per_cluster,
-                            blocklength, blocknum};
-    if(nonoverlap){
-      options = ForestOptions{num_trees, ci_group_size, sample_fraction, mtry, min_node_size, honesty,
-                              honesty_fraction, honesty_prune_leaves, alpha, imbalance_penalty, num_threads, seed, clusters, samples_per_cluster,
-                              nonoverlap, blocklength, blocknum};
-    }
+                            nonoverlap, blocklength, blocknum};
   }
   
   Forest forest = trainer.train(*data, options);
