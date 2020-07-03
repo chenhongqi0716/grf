@@ -56,6 +56,10 @@ private:
   std::vector<std::vector<size_t>> clusters;
   uint block_length = 0;
   uint block_num = 0;
+  bool no_overlap = false;
+ public:
+  bool is_no_overlap() const;
+  void set_no_overlap(bool _no_overlap);
 };
 
 } // namespace grf

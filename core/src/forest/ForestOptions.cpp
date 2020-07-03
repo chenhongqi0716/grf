@@ -84,6 +84,7 @@ ForestOptions::ForestOptions(uint num_trees,
               num_threads, random_seed, sample_clusters, samples_per_cluster){
     sampling_options.set_block_length(blocklength);
     sampling_options.set_block_num(blocknum);
+    sampling_options.set_no_overlap(nonoverlap);
 }
 
 uint ForestOptions::get_num_trees() const {
