@@ -102,7 +102,7 @@ quantile_forest <- function(X, Y,
                             mbb = FALSE,
                             nonoverlap = FALSE,
                             blocklength = floor((nrow(X))^(1/3)),
-                            blcoknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
+                            blocknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
   if (!is.numeric(quantiles) || length(quantiles) < 1) {
     stop("Error: Must provide numeric quantiles")
   } else if (min(quantiles) <= 0 || max(quantiles) >= 1) {

@@ -116,7 +116,7 @@ private:
                          size_t size);
 
  /**
-  * Sample blocks allowing repeating
+  * Sample blocks allowing overlapping
   *
   * @param samples A list of first 'size'n_first shuffled numbers
   * @param n_all Number elements
@@ -129,7 +129,7 @@ private:
                               size_t block_size);
 
   /**
-  * Sample blocks allowing repeating
+  * Sample blocks not allowing overlapping
   *
   * @param samples A list of first 'size'n_first shuffled numbers
   * @param n_all Number elements
