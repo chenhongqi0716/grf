@@ -13,6 +13,7 @@
  #-------------------------------------------------------------------------------*/
 
 #include <algorithm>
+#include <set>
 #include <random>
 
 #include "RandomSampler.h"
@@ -259,7 +260,22 @@ void RandomSampler::shuffle_and_split_block_no_overlap(std::vector<size_t>& samp
                                                        size_t n_all,
                                                        size_t size,
                                                        size_t block_size) {
+  std::set<size_t> heads;
+  samples.clear();
 
+  for (int i = 0; i < n_all - block_size + 1; ++i) {
+    heads.insert(i);
+  }
+  for (int i = 0; i < size; ++i) {
+    size_t head = random_number_generator() % heads.size();
+    for (int j = 0; j < block_size; ++j) {
+      // add the selected block
+      samples.push_back(head + j);
+      // delete heads causing overlap
+      heads.erase(head + j);
+      heads.erase(head - j);
+    }
+  }
 }
 
 } // namespace grf
