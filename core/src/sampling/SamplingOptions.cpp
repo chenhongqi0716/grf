@@ -77,5 +77,11 @@ void SamplingOptions::set_block_num(uint _block_num) {
 uint SamplingOptions::get_block_num() const {
   return block_num;
 }
+bool SamplingOptions::is_no_overlap() const {
+  return no_overlap;
+}
+void SamplingOptions::set_no_overlap(bool _no_overlap) {
+  no_overlap = _no_overlap;
+}
 
 } // namespace grf

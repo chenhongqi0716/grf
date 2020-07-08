@@ -13,6 +13,7 @@
  #-------------------------------------------------------------------------------*/
 
 #include <algorithm>
+#include <set>
 #include <random>
 
 #include "RandomSampler.h"
@@ -44,7 +45,10 @@ void RandomSampler::sample(size_t num_samples,
     size_t block_length = options.get_block_length();
     if (block_length)
       // TODO: Make this work with weighted sampling.
-      shuffle_and_split_block(samples, num_samples, options.get_block_num(), block_length);
+      if (options.is_no_overlap())
+        shuffle_and_split_block_no_overlap(samples, num_samples, options.get_block_num(), block_length);
+      else
+        shuffle_and_split_block(samples, num_samples, options.get_block_num(), block_length);
     else
       shuffle_and_split(samples, num_samples, num_samples_inbag);
   } else {
@@ -250,6 +254,28 @@ void RandomSampler::draw_weighted(std::vector<size_t>& result,
 size_t RandomSampler::sample_poisson(size_t mean) {
   nonstd::poisson_distribution<size_t> distribution(mean);
   return distribution(random_number_generator);
+}
+
+void RandomSampler::shuffle_and_split_block_no_overlap(std::vector<size_t>& samples,
+                                                       size_t n_all,
+                                                       size_t size,
+                                                       size_t block_size) {
+  std::set<size_t> heads;
+  samples.clear();
+
+  for (int i = 0; i < n_all - block_size + 1; ++i) {
+    heads.insert(i);
+  }
+  for (int i = 0; i < size; ++i) {
+    size_t head = random_number_generator() % heads.size();
+    for (int j = 0; j < block_size; ++j) {
+      // add the selected block
+      samples.push_back(head + j);
+      // delete heads causing overlap
+      heads.erase(head + j);
+      heads.erase(head - j);
+    }
+  }
 }
 
 } // namespace grf

@@ -60,6 +60,7 @@
 #'                    to the maximum hardware concurrency.
 #' @param seed The seed of the C++ random number generator.
 #' @param mbb The options of moving block-bootstrap. Default is FALSE. When mbb is TRUE, sample.fraction is invalid.
+#' @param nonoverlap The option of overlapping moving block-bootstrap. Default value is FALSE. Only valid when mbb is TRUE.
 #' @param blocklength The length of block. Only valid when mbb is TRUE. By default, the number is floor((nrow(X))^(1/3)).
 #' @param blocknum The number of blocks. Only valid when mbb is TRUE. The default is the floor of the ratio of nrow(X) and default value of blocklength.
 #'
@@ -114,6 +115,7 @@ regression_forest <- function(X, Y,
                               num.threads = NULL,
                               seed = runif(1, 0, .Machine$integer.max),
                               mbb = FALSE,
+                              nonoverlap = FALSE,
                               blocklength = floor((nrow(X))^(1/3)),
                               blocknum = floor(nrow(X)/(floor((nrow(X))^(1/3)))) ){
   has.missing.values <- validate_X(X, allow.na = TRUE)
@@ -143,6 +145,7 @@ regression_forest <- function(X, Y,
                num.threads = num.threads,
                seed = seed,
                mbb = mbb,
+               nonoverlap = nonoverlap,
                blocklength = blocklength,
                blocknum = blocknum)
   
@@ -168,6 +171,7 @@ regression_forest <- function(X, Y,
                                             num.threads = num.threads,
                                             seed = seed,
                                             mbb = mbb,
+                                            nonoverlap = nonoverlap,
                                             blocklength = blocklength,
                                             blocknum = blocknum)
     args <- modifyList(args, as.list(tuning.output[["params"]]))

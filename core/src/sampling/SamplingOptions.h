@@ -49,6 +49,8 @@ public:
   uint get_block_num() const;
   void set_block_length(uint _block_length);
   void set_block_num(uint _block_num);
+  bool is_no_overlap() const;
+  void set_no_overlap(bool _no_overlap);
 
 private:
   std::vector<double> sample_weights;
@@ -56,6 +58,7 @@ private:
   std::vector<std::vector<size_t>> clusters;
   uint block_length = 0;
   uint block_num = 0;
+  bool no_overlap = false;
 };
 
 } // namespace grf

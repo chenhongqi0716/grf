@@ -55,6 +55,7 @@ public:
                 uint random_seed,
                 const std::vector<size_t>& sample_clusters,
                 uint samples_per_cluster,
+                bool nonoverlap,
                 uint blocklength,
                 uint blocknum);
 
