@@ -85,4 +85,11 @@ std::unique_ptr<Data> load_sparse_data(const std::string& file_name) {
   return data;
 }
 
+std::vector<size_t> block_heads_to_samples(const std::vector<size_t>& block_heads, int block_length) {
+  // TODO: implement this.
+  std::vector<size_t> samples;
+  // Example: input: block_heads = {1, 3, 10}, block_length = 3, output: {1, 2, 3, 3, 4, 5, 10, 11, 12}
+  return samples;
+}
+
 } // namespace grf
