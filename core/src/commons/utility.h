@@ -44,7 +44,11 @@ std::unique_ptr<Data> load_data(const std::string& file_name);
 
 std::unique_ptr<Data> load_sparse_data(const std::string& file_name);
 
-// TODO: Add comments
+/**
+ * Recover the block sampling from heads
+ * @param block_heads A list of index of blcok_heads 
+ * @param block_length Length of block
+ */
 std::vector<size_t> block_heads_to_samples(const std::vector<size_t>& block_heads, int block_length);
 
 } // namespace grf
