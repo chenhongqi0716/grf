@@ -35,7 +35,8 @@ public:
               double honesty_fraction,
               bool honesty_prune_leaves,
               double alpha,
-              double imbalance_penalty);
+              double imbalance_penalty,
+              uint  block_length);
 
   uint get_mtry() const;
   uint get_min_node_size() const;
@@ -63,6 +64,8 @@ public:
    * A tuning parameter that controls how harshly imbalanced splits are penalized.
    */
   double get_imbalance_penalty() const;
+  
+  uint get_block_length() const;
 
 private:
   uint mtry;
@@ -72,6 +75,7 @@ private:
   bool honesty_prune_leaves;
   double alpha;
   double imbalance_penalty;
+  uint block_length = 1;
 };
 
 } // namespace grf

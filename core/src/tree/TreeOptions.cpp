@@ -25,14 +25,16 @@ TreeOptions::TreeOptions(uint mtry,
                          double honesty_fraction,
                          bool honesty_prune_leaves,
                          double alpha,
-                         double imbalance_penalty):
+                         double imbalance_penalty,
+                         uint block_length):
   mtry(mtry),
   min_node_size(min_node_size),
   honesty(honesty),
   honesty_fraction(honesty_fraction),
   honesty_prune_leaves(honesty_prune_leaves),
   alpha(alpha),
-  imbalance_penalty(imbalance_penalty) {}
+  imbalance_penalty(imbalance_penalty),
+  block_length(block_length) {}
 
 uint TreeOptions::get_mtry() const {
   return mtry;
@@ -60,6 +62,10 @@ double TreeOptions::get_alpha() const {
 
 double TreeOptions::get_imbalance_penalty() const {
   return imbalance_penalty;
+}
+
+unsigned int TreeOptions::get_block_length() const {
+  return block_length;  
 }
 
 } // namespace grf
