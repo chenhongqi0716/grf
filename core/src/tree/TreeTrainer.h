@@ -38,7 +38,7 @@ public:
 
   std::unique_ptr<Tree> train(const Data& data,
                               RandomSampler& sampler,
-                              const std::vector<size_t>& clusters,
+                              const std::vector<size_t>& cluster_heads,
                               const TreeOptions& options) const;
 
 private:

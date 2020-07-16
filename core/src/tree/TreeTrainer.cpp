@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "commons/DefaultData.h"
+#include "commons/utility.h"
 #include "tree/TreeTrainer.h"
 
 namespace grf {
@@ -32,7 +33,7 @@ TreeTrainer::TreeTrainer(std::unique_ptr<RelabelingStrategy> relabeling_strategy
 
 std::unique_ptr<Tree> TreeTrainer::train(const Data& data,
                                          RandomSampler& sampler,
-                                         const std::vector<size_t>& clusters,
+                                         const std::vector<size_t>& cluster_heads,
                                          const TreeOptions& options) const {
   std::vector<std::vector<size_t>> child_nodes;
   std::vector<std::vector<size_t>> nodes;
@@ -46,10 +47,15 @@ std::unique_ptr<Tree> TreeTrainer::train(const Data& data,
 
   std::vector<size_t> new_leaf_samples;
 
+  // TODO: Get block length
+  std::vector<size_t> clusters = block_heads_to_samples(cluster_heads, 1);
   if (options.get_honesty()) {
-    std::vector<size_t> tree_growing_clusters;
-    std::vector<size_t> new_leaf_clusters;
-    sampler.subsample(clusters, options.get_honesty_fraction(), tree_growing_clusters, new_leaf_clusters);
+    std::vector<size_t> tree_growing_heads;
+    std::vector<size_t> new_leaf_heads;
+    sampler.subsample(cluster_heads, options.get_honesty_fraction(), tree_growing_heads, new_leaf_heads);
+    // TODO: Get block length
+    std::vector<size_t> tree_growing_clusters = block_heads_to_samples(tree_growing_heads, 1);
+    std::vector<size_t> new_leaf_clusters = block_heads_to_samples(new_leaf_clusters, 1);
 
     sampler.sample_from_clusters(tree_growing_clusters, nodes[0]);
     sampler.sample_from_clusters(new_leaf_clusters, new_leaf_samples);
