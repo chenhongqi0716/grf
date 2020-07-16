@@ -36,7 +36,7 @@ public:
               bool honesty_prune_leaves,
               double alpha,
               double imbalance_penalty,
-              uint  block_length);
+              uint  block_length = 1);
 
   uint get_mtry() const;
   uint get_min_node_size() const;
@@ -75,7 +75,7 @@ private:
   bool honesty_prune_leaves;
   double alpha;
   double imbalance_penalty;
-  uint block_length = 1;
+  uint block_length;
 };
 
 } // namespace grf
