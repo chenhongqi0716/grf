@@ -26,7 +26,7 @@ TreeOptions::TreeOptions(uint mtry,
                          bool honesty_prune_leaves,
                          double alpha,
                          double imbalance_penalty,
-                         uint block_length):
+                         uint block_length = 1):
   mtry(mtry),
   min_node_size(min_node_size),
   honesty(honesty),
