@@ -43,14 +43,11 @@ void RandomSampler::sample(size_t num_samples,
   size_t num_samples_inbag = (size_t) num_samples * sample_fraction;
   if (options.get_sample_weights().empty()) {
     size_t block_length = options.get_block_length();
-    if (block_length)
-      // TODO: Make this work with weighted sampling.
-      if (options.is_no_overlap())
-        shuffle_and_split_block_no_overlap(samples, num_samples, options.get_block_num(), block_length);
-      else
-        shuffle_and_split_block(samples, num_samples, options.get_block_num(), block_length);
+    // TODO: Make this work with weighted sampling.
+    if (options.is_no_overlap())
+      shuffle_and_split_block_no_overlap(samples, num_samples, options.get_block_num(), block_length);
     else
-      shuffle_and_split(samples, num_samples, num_samples_inbag);
+      shuffle_and_split_block(samples, num_samples, options.get_block_num(), block_length);
   } else {
     draw_weighted(samples,
                   num_samples - 1,
@@ -158,15 +155,7 @@ void RandomSampler::shuffle_and_split_block(std::vector<size_t>& samples,
   // Select the first element of each block
   std::iota(heads.begin(), heads.end(), 0);
   nonstd::shuffle(heads.begin(), heads.end(), random_number_generator);
-  heads.resize(size);
-
-  // Add all elements in each block
-  samples.clear();
-  for (auto head:heads) {
-    for (int i = 0; i < block_size; ++i) {
-      samples.push_back(head + i);
-    }
-  }
+  samples = {heads.begin(), heads.begin() + size};
 }
 
 void RandomSampler::draw(std::vector<size_t>& result,
@@ -268,9 +257,9 @@ void RandomSampler::shuffle_and_split_block_no_overlap(std::vector<size_t>& samp
   }
   for (int i = 0; i < size; ++i) {
     size_t head = random_number_generator() % heads.size();
+    // add the selected block head
+    samples.push_back(head);
     for (int j = 0; j < block_size; ++j) {
-      // add the selected block
-      samples.push_back(head + j);
       // delete heads causing overlap
       heads.erase(head + j);
       heads.erase(head - j);
