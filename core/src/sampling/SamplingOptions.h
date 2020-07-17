@@ -56,7 +56,7 @@ private:
   std::vector<double> sample_weights;
   uint num_samples_per_cluster;
   std::vector<std::vector<size_t>> clusters;
-  uint block_length;
+  uint block_length = 1;
   uint block_num = 0;
   bool no_overlap = false;
 };
