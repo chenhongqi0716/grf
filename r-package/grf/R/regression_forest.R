@@ -33,6 +33,7 @@
 #'  For a detailed description of honesty, honesty.fraction, honesty.prune.leaves, and recommendations for
 #'  parameter tuning, see the grf
 #'  \href{https://grf-labs.github.io/grf/REFERENCE.html#honesty-honesty-fraction-honesty-prune-leaves}{algorithm reference}.
+#'  Honesty option is also valid under mbb setting. Instead of splitting the sample of observations. It splits the sample of blocks.
 #' @param honesty.fraction The fraction of data that will be used for determining splits if honesty = TRUE. Corresponds
 #'                         to set J1 in the notation of the paper. Default is 0.5 (i.e. half of the data is used for
 #'                         determining splits).
