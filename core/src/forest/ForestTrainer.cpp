@@ -124,9 +124,9 @@ std::vector<std::unique_ptr<Tree>> ForestTrainer::train_batch(
 std::unique_ptr<Tree> ForestTrainer::train_tree(const Data& data,
                                                 RandomSampler& sampler,
                                                 const ForestOptions& options) const {
-  std::vector<size_t> clusters;
-  sampler.sample_clusters(data.get_num_rows(), options.get_sample_fraction(), clusters);
-  return tree_trainer.train(data, sampler, clusters, options.get_tree_options());
+  std::vector<size_t> cluster_heads;
+  sampler.sample_clusters(data.get_num_rows(), options.get_sample_fraction(), cluster_heads);
+  return tree_trainer.train(data, sampler, cluster_heads, options.get_tree_options());
 }
 
 std::vector<std::unique_ptr<Tree>> ForestTrainer::train_ci_group(const Data& data,
