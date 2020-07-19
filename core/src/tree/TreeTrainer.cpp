@@ -47,7 +47,6 @@ std::unique_ptr<Tree> TreeTrainer::train(const Data& data,
 
   std::vector<size_t> new_leaf_samples;
 
-
   std::vector<size_t> clusters = block_heads_to_samples(cluster_heads, options.get_block_length());
   if (options.get_honesty()) {
     std::vector<size_t> tree_growing_heads;
